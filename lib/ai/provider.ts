@@ -1,4 +1,6 @@
 import { createAmazonBedrock } from "@ai-sdk/amazon-bedrock";
+import { defaultProvider } from "@aws-sdk/credential-provider-node";
+import { AWS_REGION } from "@/lib/db/client";
 
 /**
  * Claude Sonnet reached through a cross-region inference profile (the `us.`
@@ -17,12 +19,16 @@ let cached: ReturnType<typeof createAmazonBedrock> | undefined;
 function getProvider(): ReturnType<typeof createAmazonBedrock> {
   if (cached) return cached;
 
+  const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
+  const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
+
   cached = createAmazonBedrock({
-    region: process.env.AWS_REGION ?? "us-east-1",
-    // Left undefined, the provider reads the standard AWS env vars itself,
-    // which is what we want when running under an instance role.
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    region: AWS_REGION,
+    // Explicit keys for local development; otherwise the standard AWS chain,
+    // which resolves the Amplify compute role (or any instance role) in prod.
+    ...(accessKeyId && secretAccessKey
+      ? { accessKeyId, secretAccessKey, sessionToken: process.env.AWS_SESSION_TOKEN }
+      : { credentialProvider: defaultProvider() }),
   });
 
   return cached;

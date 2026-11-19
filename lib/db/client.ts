@@ -21,7 +21,14 @@ export const TABLES = {
  */
 export const CONVERSATIONS_BY_UPDATED_AT = "byUpdatedAt";
 
-export const AWS_REGION = process.env.AWS_REGION ?? "us-east-1";
+/**
+ * Region of the VELOXIZ_ tables and the Bedrock inference profile.
+ *
+ * VELOXIZ_AWS_REGION wins because hosts like Amplify reserve the AWS_ prefix
+ * and set AWS_REGION to wherever the app itself runs, which may differ.
+ */
+export const AWS_REGION =
+  process.env.VELOXIZ_AWS_REGION ?? process.env.AWS_REGION ?? "us-east-1";
 
 function readCredentials() {
   const accessKeyId = process.env.AWS_ACCESS_KEY_ID;

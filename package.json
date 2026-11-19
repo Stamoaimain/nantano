@@ -13,6 +13,7 @@
     "@ai-sdk/amazon-bedrock": "^5.0.130",
     "@ai-sdk/react": "^4.0.163",
     "@aws-sdk/client-dynamodb": "^3.1161.0",
+    "@aws-sdk/credential-provider-node": "^3.972.97",
     "@aws-sdk/lib-dynamodb": "^3.1161.0",
     "@radix-ui/react-dialog": "^1.1.13",
     "@radix-ui/react-dropdown-menu": "^2.1.14",
