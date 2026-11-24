@@ -1,8 +1,9 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import { appUrl } from "@/lib/app-url";
 import { SESSION_COOKIE } from "@/lib/auth/session";
 
-export async function POST(request: NextRequest) {
-  const response = NextResponse.redirect(new URL("/", request.url));
+export async function POST() {
+  const response = NextResponse.redirect(appUrl("/"));
   response.cookies.set(SESSION_COOKIE, "", { path: "/", maxAge: 0 });
   return response;
 }

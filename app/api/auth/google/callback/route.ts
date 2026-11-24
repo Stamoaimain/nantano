@@ -7,15 +7,16 @@ import {
 } from "@/lib/auth/session";
 import { upsertUser } from "@/lib/db/users";
 import { isAccessDenied } from "@/lib/db/client";
+import { appUrl } from "@/lib/app-url";
 import {
   OAUTH_NEXT_COOKIE,
   OAUTH_STATE_COOKIE,
   OAUTH_VERIFIER_COOKIE,
 } from "@/app/api/auth/google/start/route";
 
-function failure(request: NextRequest, message: string) {
+function failure(message: string) {
   const response = NextResponse.redirect(
-    new URL(`/signin?error=${encodeURIComponent(message)}`, request.url)
+    appUrl(`/signin?error=${encodeURIComponent(message)}`),
   );
   clearTransientCookies(response);
   return response;
@@ -37,10 +38,9 @@ export async function GET(request: NextRequest) {
   const oauthError = url.searchParams.get("error");
   if (oauthError) {
     return failure(
-      request,
       oauthError === "access_denied"
         ? "Sign-in was cancelled."
-        : `Google returned an error: ${oauthError}`
+        : `Google returned an error: ${oauthError}`,
     );
   }
 
@@ -49,17 +49,15 @@ export async function GET(request: NextRequest) {
 
   const expectedState = request.cookies.get(OAUTH_STATE_COOKIE)?.value;
   const verifier = request.cookies.get(OAUTH_VERIFIER_COOKIE)?.value;
-  const nextPath = request.cookies.get(OAUTH_NEXT_COOKIE)?.value ?? "/dashboard";
+  const nextPath =
+    request.cookies.get(OAUTH_NEXT_COOKIE)?.value ?? "/dashboard";
 
   if (!code || !state || !expectedState || !verifier) {
-    return failure(
-      request,
-      "Sign-in session expired. Please try again."
-    );
+    return failure("Sign-in session expired. Please try again.");
   }
 
   if (state !== expectedState) {
-    return failure(request, "Invalid sign-in state. Please try again.");
+    return failure("Invalid sign-in state. Please try again.");
   }
 
   let profile;
@@ -67,7 +65,7 @@ export async function GET(request: NextRequest) {
     ({ profile } = await exchangeCode(code, verifier));
   } catch (error) {
     console.error("[auth] Google code exchange failed", error);
-    return failure(request, "Could not verify your Google account. Please try again.");
+    return failure("Could not verify your Google account. Please try again.");
   }
 
   try {
@@ -82,12 +80,11 @@ export async function GET(request: NextRequest) {
 
     if (isAccessDenied(error)) {
       return failure(
-        request,
-        "Database access denied. The AWS credentials need DynamoDB permissions on the VELOXIZ_ tables."
+        "Database access denied. The AWS credentials need DynamoDB permissions on the VELOXIZ_ tables.",
       );
     }
 
-    return failure(request, "Could not create your account. Please try again.");
+    return failure("Could not create your account. Please try again.");
   }
 
   const token = await signSessionToken({
@@ -97,7 +94,7 @@ export async function GET(request: NextRequest) {
     picture: profile.picture,
   });
 
-  const response = NextResponse.redirect(new URL(nextPath, request.url));
+  const response = NextResponse.redirect(appUrl(nextPath));
   response.cookies.set(SESSION_COOKIE, token, sessionCookieOptions());
   clearTransientCookies(response);
 

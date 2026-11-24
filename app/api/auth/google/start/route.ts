@@ -5,6 +5,7 @@ import {
   createVerifier,
   deriveChallenge,
 } from "@/lib/auth/google";
+import { appUrl } from "@/lib/app-url";
 
 /**
  * Begins the OAuth flow. The PKCE verifier and CSRF state are stashed in
@@ -45,7 +46,7 @@ async function start(request: NextRequest) {
     const message =
       error instanceof Error ? error.message : "OAuth is not configured.";
     return NextResponse.redirect(
-      new URL(`/signin?error=${encodeURIComponent(message)}`, request.url)
+      appUrl(`/signin?error=${encodeURIComponent(message)}`)
     );
   }
 

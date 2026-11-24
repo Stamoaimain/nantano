@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth/session";
+import { appUrl } from "@/lib/app-url";
 
 /**
  * Gate for the dashboard. Verifies the session JWT at the edge so unauthenticated
@@ -13,7 +14,7 @@ export default async function proxy(request: NextRequest) {
 
   if (session) return NextResponse.next();
 
-  const signInUrl = new URL("/signin", request.url);
+  const signInUrl = appUrl("/signin");
   signInUrl.searchParams.set(
     "next",
     `${request.nextUrl.pathname}${request.nextUrl.search}`

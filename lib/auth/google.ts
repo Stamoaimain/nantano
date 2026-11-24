@@ -1,4 +1,5 @@
 import { createRemoteJWKSet, jwtVerify } from "jose";
+import { getAppOrigin } from "@/lib/app-url";
 
 const GOOGLE_ISSUERS = ["https://accounts.google.com", "accounts.google.com"];
 const AUTH_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth";
@@ -34,8 +35,7 @@ export function getClientId(): string {
  * authorized redirect URIs, so it is derived from one env var only.
  */
 export function getRedirectUri(): string {
-  const appUrl = process.env.APP_URL ?? "http://localhost:3000";
-  return `${appUrl.replace(/\/$/, "")}/api/auth/google/callback`;
+  return `${getAppOrigin()}/api/auth/google/callback`;
 }
 
 /** base64url without padding, per RFC 7636. */
