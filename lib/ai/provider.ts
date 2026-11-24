@@ -19,16 +19,11 @@ let cached: ReturnType<typeof createAmazonBedrock> | undefined;
 function getProvider(): ReturnType<typeof createAmazonBedrock> {
   if (cached) return cached;
 
-  const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
-  const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
-
   cached = createAmazonBedrock({
     region: AWS_REGION,
-    // Explicit keys for local development; otherwise the standard AWS chain,
-    // which resolves the Amplify compute role (or any instance role) in prod.
-    ...(accessKeyId && secretAccessKey
-      ? { accessKeyId, secretAccessKey, sessionToken: process.env.AWS_SESSION_TOKEN }
-      : { credentialProvider: defaultProvider() }),
+    // Same default chain as DynamoDB: .env keys locally, the Amplify compute
+    // role (including its session token) in production.
+    credentialProvider: defaultProvider(),
   });
 
   return cached;

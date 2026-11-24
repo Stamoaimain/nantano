@@ -30,30 +30,20 @@ export const CONVERSATIONS_BY_UPDATED_AT = "byUpdatedAt";
 export const AWS_REGION =
   process.env.VELOXIZ_AWS_REGION ?? process.env.AWS_REGION ?? "us-east-1";
 
-function readCredentials() {
-  const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
-  const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
-
-  // Fall back to the default provider chain (instance role, SSO, shared config)
-  // when explicit keys are not set, which is what we want in production.
-  if (!accessKeyId || !secretAccessKey) return undefined;
-
-  return { accessKeyId, secretAccessKey };
-}
-
 let cached: DynamoDBDocumentClient | undefined;
 
 /**
  * Shared document client. Memoised so hot reloads and concurrent requests do
  * not open a new connection pool per call.
+ *
+ * Credentials come from the SDK's default chain: env keys locally (.env), and
+ * the Amplify compute role's temporary credentials in production. Passing keys
+ * by hand would drop AWS_SESSION_TOKEN and make role credentials invalid.
  */
 export function getDocClient(): DynamoDBDocumentClient {
   if (cached) return cached;
 
-  const base = new DynamoDBClient({
-    region: AWS_REGION,
-    credentials: readCredentials(),
-  });
+  const base = new DynamoDBClient({ region: AWS_REGION });
 
   cached = DynamoDBDocumentClient.from(base, {
     marshallOptions: {
